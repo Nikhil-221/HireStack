@@ -42,12 +42,14 @@ async def create_user(db:db_dependency,user:UserRequest):
         email = user.email,
         username = user.username,
         hashed_password = bcrypt_context.hash(user.password),
-        role = user.role
+        role = user.role,
+        is_active = user.is_active,
+        joining_date = user.joining_date
     )
     db.add(new_user)
     db.commit()
     return {"message":"User created"}
 
-@router.get("get_all_users",status_code = status.HTTP_200_OK)
+@router.get("/get_all_users",status_code = status.HTTP_200_OK)
 async def get_all_users(db:db_dependency,user:user_dependency):
     return db.query(Users).all()
