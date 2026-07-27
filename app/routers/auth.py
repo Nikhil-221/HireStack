@@ -9,6 +9,7 @@ from fastapi import Depends, HTTPException
 from datetime import datetime
 from datetime import timezone,timedelta
 from ..models import Users
+from ..schemas.auth import RegisterRequest, UserOut
 from jose import jwt, JWTError
 from starlette import status
 from dotenv import load_dotenv
@@ -79,6 +80,32 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 db_dependency = Annotated[Session, Depends(get_db)]
 user_dependency = Annotated[dict,Depends(get_current_user)]
+
+RECRUITER_ROLES = {"admin", "recruiter"}
+
+async def require_recruiter(user: user_dependency) -> dict:
+    if user["role"].lower() not in RECRUITER_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized for this action"
+        )
+    return user
+
+recruiter_dependency = Annotated[dict, Depends(require_recruiter)]
+
+@router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserOut)
+async def register(db: db_dependency, payload: RegisterRequest):
+    new_user = Users(
+        name=payload.name,
+        email=payload.email,
+        username=payload.username,
+        hashed_password=bcrypt_context.hash(payload.password),
+        role=payload.role,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
 @router.post("/token",status_code=status.HTTP_200_OK)
 async def login(db: db_dependency,form_data: Annotated[OAuth2PasswordRequestForm,Depends()]):
