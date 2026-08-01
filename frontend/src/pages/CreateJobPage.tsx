@@ -15,8 +15,13 @@ export function CreateJobPage() {
     const generated = await generateJobDescription({
       title: values.title,
       department: values.department || undefined,
+      location: values.location || undefined,
       employment_type: values.employment_type || undefined,
       experience_required: values.experience_required || undefined,
+      salary_min: values.salary_min.trim() ? Number(values.salary_min) : undefined,
+      salary_max: values.salary_max.trim() ? Number(values.salary_max) : undefined,
+      openings: values.openings.trim() ? Number(values.openings) : undefined,
+      description: values.description || undefined,
     })
     setValues((prev) => ({
       ...prev,

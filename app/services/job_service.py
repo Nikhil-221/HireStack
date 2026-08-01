@@ -43,6 +43,11 @@ class JobService:
         return generate_job_description(
             title=request.title,
             department=request.department,
+            location=request.location,
             employment_type=request.employment_type,
             experience_required=request.experience_required,
+            salary_min=request.salary_min,
+            salary_max=request.salary_max,
+            openings=request.openings,
+            description=request.description,
         )

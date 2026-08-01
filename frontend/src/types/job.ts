@@ -55,8 +55,13 @@ export interface JobPayload {
 export interface GenerateJDRequest {
   title: string
   department?: string
+  location?: string
   employment_type?: string
   experience_required?: string
+  salary_min?: number
+  salary_max?: number
+  openings?: number
+  description?: string
 }
 
 export interface GenerateJDResponse {

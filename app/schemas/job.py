@@ -43,8 +43,13 @@ class JobOut(JobBase):
 class GenerateJDRequest(BaseModel):
     title: str
     department: Optional[str] = None
+    location: Optional[str] = None
     employment_type: Optional[str] = None
     experience_required: Optional[str] = None
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    openings: Optional[int] = None
+    description: Optional[str] = None
 
 class GenerateJDResponse(BaseModel):
     description: str
