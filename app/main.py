@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+
 from .database import Base,engine
-from .routers import auth,users,jobs
+from .routers import auth,users,jobs,candidates
 from . import models
 
 app = FastAPI()
@@ -20,5 +22,12 @@ app.add_middleware(
 app.include_router(router=auth.router)
 app.include_router(router=users.router)
 app.include_router(router=jobs.router)
+app.include_router(router=candidates.router)
 
-Base.metadata.create_all(bind = engine)
+Base.metadata.create_all(bind=engine)
+
+# `create_all` creates new tables but does not add columns to tables that already
+# exist. Keep this MVP migration idempotent so current local databases can use the
+# required job deadline field immediately.
+with engine.begin() as connection:
+    connection.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS deadline DATE"))

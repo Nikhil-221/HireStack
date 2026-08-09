@@ -10,6 +10,7 @@ export interface Job {
   salary_min: number | null
   salary_max: number | null
   openings: number
+  deadline: string | null
   description: string | null
   responsibilities: string[] | null
   required_skills: string[] | null
@@ -29,6 +30,7 @@ export interface JobFormValues {
   salary_min: string
   salary_max: string
   openings: string
+  deadline: string
   description: string
   responsibilities: string[]
   required_skills: string[]
@@ -45,6 +47,7 @@ export interface JobPayload {
   salary_min: number | null
   salary_max: number | null
   openings: number
+  deadline: string
   description: string | null
   responsibilities: string[]
   required_skills: string[]

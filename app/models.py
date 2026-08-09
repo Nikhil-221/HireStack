@@ -1,5 +1,5 @@
 from .database import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import func
 from sqlalchemy import Date
@@ -29,6 +29,7 @@ class Job(Base):
     salary_min = Column(Integer, nullable=True)
     salary_max = Column(Integer, nullable=True)
     openings = Column(Integer, nullable=False, default=1)
+    deadline = Column(Date, nullable=True)
     description = Column(Text, nullable=True)
     responsibilities = Column(ARRAY(String), nullable=True)
     required_skills = Column(ARRAY(String), nullable=True)
@@ -36,4 +37,31 @@ class Job(Base):
     qualifications = Column(ARRAY(String), nullable=True)
     status = Column(String, nullable=False, default="Draft")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class CandidateProfile(Base):
+    __tablename__ = "candidate_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False, index=True)
+    phone = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+    education = Column(Text, nullable=True)
+    experience = Column(Text, nullable=True)
+    skills = Column(ARRAY(String), nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class Application(Base):
+    __tablename__ = "applications"
+    __table_args__ = (UniqueConstraint("job_id", "candidate_id", name="uq_application_job_candidate"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False, index=True)
+    candidate_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    resume_filename = Column(String, nullable=False)
+    resume_path = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="Applied")
+    applied_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

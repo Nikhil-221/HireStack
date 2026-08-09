@@ -106,6 +106,14 @@ export function JobForm({
           onChange={(e) => update('openings', e.target.value)}
         />
         <Input
+          id="deadline"
+          label="Application deadline"
+          type="date"
+          required
+          value={values.deadline}
+          onChange={(e) => update('deadline', e.target.value)}
+        />
+        <Input
           id="salary_min"
           label="Minimum salary"
           type="number"

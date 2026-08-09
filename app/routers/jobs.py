@@ -12,6 +12,8 @@ from ..schemas.job import (
     GenerateJDResponse,
 )
 from ..services.job_service import JobService
+from ..models import Application, CandidateProfile, Users
+from ..schemas.application import ApplicationStatusUpdate, JobApplicantOut
 from .auth import require_recruiter
 
 router = APIRouter(
@@ -57,3 +59,66 @@ async def delete_job(db: db_dependency, user: user_dependency, job_id: int):
 @router.patch("/{job_id}/status", status_code=status.HTTP_200_OK, response_model=JobOut)
 async def change_job_status(db: db_dependency, user: user_dependency, job_id: int, status_update: JobStatusUpdate):
     return JobService(db).update_status(job_id, status_update)
+
+@router.get("/{job_id}/applications", status_code=status.HTTP_200_OK, response_model=List[JobApplicantOut])
+async def get_job_applications(db: db_dependency, user: user_dependency, job_id: int):
+    JobService(db).get_job(job_id)
+    rows = (
+        db.query(Application, Users, CandidateProfile)
+        .join(Users, Users.id == Application.candidate_id)
+        .outerjoin(CandidateProfile, CandidateProfile.user_id == Users.id)
+        .filter(Application.job_id == job_id)
+        .order_by(Application.applied_at.desc())
+        .all()
+    )
+    return [
+        {
+            "id": application.id,
+            "candidate_id": candidate.id,
+            "name": candidate.name,
+            "email": candidate.email,
+            "phone": profile.phone if profile else None,
+            "location": profile.location if profile else None,
+            "experience": profile.experience if profile else None,
+            "resume_filename": application.resume_filename,
+            "status": application.status,
+            "applied_at": application.applied_at,
+            "updated_at": application.updated_at,
+        }
+        for application, candidate, profile in rows
+    ]
+
+@router.patch("/{job_id}/applications/{application_id}/status", status_code=status.HTTP_200_OK, response_model=JobApplicantOut)
+async def update_application_status(
+    db: db_dependency,
+    user: user_dependency,
+    job_id: int,
+    application_id: int,
+    status_update: ApplicationStatusUpdate,
+):
+    application = (
+        db.query(Application)
+        .filter(Application.id == application_id, Application.job_id == job_id)
+        .first()
+    )
+    if application is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+    application.status = status_update.status.value
+    db.commit()
+    db.refresh(application)
+    candidate = db.query(Users).filter(Users.id == application.candidate_id).first()
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == candidate.id).first()
+    return {
+        "id": application.id,
+        "candidate_id": candidate.id,
+        "name": candidate.name,
+        "email": candidate.email,
+        "phone": profile.phone if profile else None,
+        "location": profile.location if profile else None,
+        "experience": profile.experience if profile else None,
+        "resume_filename": application.resume_filename,
+        "status": application.status,
+        "applied_at": application.applied_at,
+        "updated_at": application.updated_at,
+    }

@@ -52,13 +52,14 @@ export function JobsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Jobs</h1>
-          <p className="mt-1 text-sm text-slate-500">Manage all job openings.</p>
+          <p className="text-xs font-bold uppercase tracking-[.16em] text-brand-600">Job management</p>
+          <h1 className="page-heading mt-2">Open positions</h1>
+          <p className="page-subtitle">Create, publish, and manage every role in one place.</p>
         </div>
         <Button onClick={() => navigate('/jobs/new')}>Create Job</Button>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70 sm:flex-row sm:items-end sm:gap-4">
         <div className="flex-1">
           <Input
             id="search"
@@ -79,7 +80,7 @@ export function JobsPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_12px_35px_rgba(15,23,42,.06)] ring-1 ring-slate-200/70">
         {isLoading ? (
           <p className="px-5 py-6 text-sm text-slate-500">Loading jobs…</p>
         ) : error ? (
@@ -88,13 +89,14 @@ export function JobsPage() {
           <p className="px-5 py-6 text-sm text-slate-500">No jobs match your filters.</p>
         ) : (
           <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+            <thead className="bg-slate-50/80">
               <tr>
                 <Th>Title</Th>
                 <Th>Department</Th>
                 <Th>Location</Th>
                 <Th>Type</Th>
                 <Th>Openings</Th>
+                <Th>Deadline</Th>
                 <Th>Status</Th>
               </tr>
             </thead>
@@ -103,10 +105,10 @@ export function JobsPage() {
                 <tr
                   key={job.id}
                   onClick={() => navigate(`/jobs/${job.id}`)}
-                  className="cursor-pointer hover:bg-slate-50"
+                  className="cursor-pointer transition hover:bg-brand-50/40"
                 >
                   <td className="whitespace-nowrap px-5 py-3 text-sm font-medium text-slate-900">
-                    <Link to={`/jobs/${job.id}`} className="hover:text-indigo-600">
+                    <Link to={`/jobs/${job.id}`} className="hover:text-brand-600">
                       {job.title}
                     </Link>
                   </td>
@@ -122,6 +124,9 @@ export function JobsPage() {
                   <td className="whitespace-nowrap px-5 py-3 text-sm text-slate-600">
                     {job.openings}
                   </td>
+                  <td className="whitespace-nowrap px-5 py-3 text-sm text-slate-600">
+                    {formatDeadline(job.deadline)}
+                  </td>
                   <td className="whitespace-nowrap px-5 py-3 text-sm">
                     <StatusBadge status={job.status} />
                   </td>
@@ -135,9 +140,16 @@ export function JobsPage() {
   )
 }
 
+function formatDeadline(deadline: string | null) {
+  if (!deadline) return 'Not set'
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+    new Date(`${deadline}T00:00:00`)
+  )
+}
+
 function Th({ children }: { children: string }) {
   return (
-    <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+    <th className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[.12em] text-slate-400">
       {children}
     </th>
   )
