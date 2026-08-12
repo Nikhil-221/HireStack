@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type KeyboardEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { changeJobStatus, deleteJob, fetchJob, updateJob } from '@/api/jobs'
 import { JobForm } from '@/components/jobs/JobForm'
@@ -65,6 +65,17 @@ export function JobDetailsPage() {
       setApplicants((current) => current.map((applicant) => applicant.id === applicationId ? updated : applicant))
     } catch {
       setError('Could not update application status.')
+    }
+  }
+
+  const navigateApplicant = (applicationId: number) => {
+    navigate(`/jobs/${jobId}/applicants/${applicationId}`)
+  }
+
+  const handleApplicantRowKeyDown = (event: KeyboardEvent<HTMLDivElement>, applicationId: number) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      navigateApplicant(applicationId)
     }
   }
 
@@ -193,18 +204,27 @@ export function JobDetailsPage() {
         ) : (
           <div className="divide-y divide-slate-200">
             {applicants.map((applicant) => (
-              <div key={applicant.id} className="flex flex-wrap items-center justify-between gap-4 px-6 py-5 transition hover:bg-slate-50/70">
-                <div>
+              <div
+                key={applicant.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigateApplicant(applicant.id)}
+                onKeyDown={(event) => handleApplicantRowKeyDown(event, applicant.id)}
+                className="flex flex-wrap items-center justify-between gap-4 px-6 py-5 cursor-pointer transition hover:bg-slate-50/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-900">{applicant.name}</p>
-                  <p className="text-sm text-slate-500">{applicant.email} · {applicant.resume_filename}</p>
-                  {applicant.experience && <p className="mt-1 text-xs text-slate-500">{applicant.experience}</p>}
+                  <p className="mt-1 text-sm text-slate-500">{applicant.email} · {applicant.resume_filename}</p>
+                  {applicant.experience && <p className="mt-1 text-xs text-slate-500">Experience: {applicant.experience}</p>}
                 </div>
-                <Select
-                  id={`application-status-${applicant.id}`}
-                  options={applicationStatusOptions}
-                  value={applicant.status}
-                  onChange={(event) => handleApplicantStatusChange(applicant.id, event.target.value as ApplicationStatus)}
-                />
+                <div className="w-full sm:w-auto" onClick={(event) => event.stopPropagation()}>
+                  <Select
+                    id={`application-status-${applicant.id}`}
+                    options={applicationStatusOptions}
+                    value={applicant.status}
+                    onChange={(event) => handleApplicantStatusChange(applicant.id, event.target.value as ApplicationStatus)}
+                  />
+                </div>
               </div>
             ))}
           </div>
