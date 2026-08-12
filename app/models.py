@@ -63,5 +63,8 @@ class Application(Base):
     resume_filename = Column(String, nullable=False)
     resume_path = Column(String, nullable=False)
     status = Column(String, nullable=False, default="Applied")
+    resume_screening_score = Column(Integer, nullable=True)
+    coding_round_score = Column(Integer, nullable=True)
+    interview_score = Column(Integer, nullable=True)
     applied_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

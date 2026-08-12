@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
-import { fetchJobApplicants, updateApplicationStatus } from '@/api/applications'
+import { fetchJobApplicants, updateApplicationStatus, fetchResumeForView, fetchResumeForDownload } from '@/api/applications'
 import type { ApplicationStatus, JobApplicant } from '@/types/candidate'
 
 export function ApplicantDetailsPage() {
@@ -12,6 +12,9 @@ export function ApplicantDetailsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [resumeError, setResumeError] = useState<string | null>(null)
+  const [isViewingResume, setIsViewingResume] = useState(false)
+  const [isDownloadingResume, setIsDownloadingResume] = useState(false)
 
   useEffect(() => {
     if (!jobId || !applicantId) {
@@ -44,6 +47,74 @@ export function ApplicantDetailsPage() {
       setError('Could not update application status.')
     } finally {
       setIsUpdating(false)
+    }
+  }
+
+  const handleViewResume = async () => {
+    if (!applicant || !jobId) return
+    
+    const fileExt = applicant.resume_filename.toLowerCase().slice(applicant.resume_filename.lastIndexOf('.'))
+    
+    // Only PDFs can be previewed in-browser
+    if (fileExt !== '.pdf') {
+      setResumeError('Preview unavailable for this file type. Please download instead.')
+      return
+    }
+
+    setIsViewingResume(true)
+    setResumeError(null)
+    
+    try {
+      const blob = await fetchResumeForView(Number(jobId), applicant.id)
+      const objectUrl = URL.createObjectURL(blob)
+      window.open(objectUrl, '_blank')
+      
+      // Clean up the object URL after a delay to allow the browser to read it
+      setTimeout(() => {
+        URL.revokeObjectURL(objectUrl)
+      }, 1000)
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status: number }; message?: string }
+      if (axiosError?.response?.status === 401) {
+        setResumeError('Session expired, please log in again.')
+      } else {
+        setResumeError('Could not load resume. Please try again.')
+      }
+    } finally {
+      setIsViewingResume(false)
+    }
+  }
+
+  const handleDownloadResume = async () => {
+    if (!applicant || !jobId) return
+    
+    setIsDownloadingResume(true)
+    setResumeError(null)
+    
+    try {
+      const blob = await fetchResumeForDownload(Number(jobId), applicant.id)
+      const objectUrl = URL.createObjectURL(blob)
+      
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = applicant.resume_filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // Clean up the object URL after a delay
+      setTimeout(() => {
+        URL.revokeObjectURL(objectUrl)
+      }, 1000)
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status: number }; message?: string }
+      if (axiosError?.response?.status === 401) {
+        setResumeError('Session expired, please log in again.')
+      } else {
+        setResumeError('Could not download resume. Please try again.')
+      }
+    } finally {
+      setIsDownloadingResume(false)
     }
   }
 
@@ -108,14 +179,26 @@ export function ApplicantDetailsPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-base font-semibold text-slate-900">Resume</h2>
-            <p className="mt-2 text-sm text-slate-600">Resume preview/download is reserved for the next implementation phase.</p>
+            {resumeError && (
+              <p className="mt-2 text-sm text-amber-700">{resumeError}</p>
+            )}
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button type="button" variant="secondary" disabled>
-              View resume
+            <Button 
+              type="button" 
+              variant="secondary" 
+              onClick={handleViewResume}
+              disabled={isViewingResume || isDownloadingResume}
+            >
+              {isViewingResume ? 'Loading…' : 'View resume'}
             </Button>
-            <Button type="button" variant="ghost" disabled>
-              Download resume
+            <Button 
+              type="button" 
+              variant="ghost" 
+              onClick={handleDownloadResume}
+              disabled={isViewingResume || isDownloadingResume}
+            >
+              {isDownloadingResume ? 'Downloading…' : 'Download resume'}
             </Button>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 const navItems = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/jobs', label: 'Jobs' },
+  { to: '/candidates', label: 'Candidates' },
 ]
 
 export function Sidebar() {

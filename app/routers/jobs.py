@@ -1,5 +1,7 @@
-from typing import Annotated, List
-from fastapi import APIRouter, Depends
+from pathlib import Path
+from typing import Annotated, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from starlette import status
 from ..database import SessionLocal
@@ -12,8 +14,8 @@ from ..schemas.job import (
     GenerateJDResponse,
 )
 from ..services.job_service import JobService
-from ..models import Application, CandidateProfile, Users
-from ..schemas.application import ApplicationStatusUpdate, JobApplicantOut
+from ..models import Application, CandidateProfile, Users, Job
+from ..schemas.application import ApplicationStatusUpdate, JobApplicantOut, AllCandidatesOut
 from .auth import require_recruiter
 
 router = APIRouter(
@@ -122,3 +124,108 @@ async def update_application_status(
         "applied_at": application.applied_at,
         "updated_at": application.updated_at,
     }
+
+
+def get_mime_type(filename: str) -> str:
+    """Get MIME type based on file extension."""
+    ext = Path(filename).suffix.lower()
+    mime_types = {
+        ".pdf": "application/pdf",
+        ".doc": "application/msword",
+        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    }
+    return mime_types.get(ext, "application/octet-stream")
+
+
+@router.get("/admin/candidates", status_code=status.HTTP_200_OK, response_model=List[AllCandidatesOut])
+async def get_all_candidates(
+    db: db_dependency,
+    user: user_dependency,
+    job_id: Optional[int] = Query(None),
+):
+    """Get all candidates across all jobs, optionally filtered by job_id."""
+    query = (
+        db.query(Application, Users, Job)
+        .join(Users, Users.id == Application.candidate_id)
+        .join(Job, Job.id == Application.job_id)
+        .order_by(Application.applied_at.desc())
+    )
+    
+    if job_id is not None:
+        query = query.filter(Application.job_id == job_id)
+    
+    rows = query.all()
+    
+    return [
+        {
+            "id": application.id,
+            "application_id": application.id,
+            "candidate_id": candidate.id,
+            "name": candidate.name,
+            "email": candidate.email,
+            "job_title": job.title,
+            "job_id": job.id,
+            "resume_screening_score": application.resume_screening_score,
+            "coding_round_score": application.coding_round_score,
+            "interview_score": application.interview_score,
+            "status": application.status,
+            "applied_at": application.applied_at,
+        }
+        for application, candidate, job in rows
+    ]
+
+
+@router.get("/{job_id}/applications/{application_id}/resume/view", status_code=status.HTTP_200_OK)
+async def view_resume(
+    db: db_dependency,
+    user: user_dependency,
+    job_id: int,
+    application_id: int,
+):
+    """View resume inline (for PDF preview in browser)."""
+    application = (
+        db.query(Application)
+        .filter(Application.id == application_id, Application.job_id == job_id)
+        .first()
+    )
+    if application is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+    
+    resume_path = Path(application.resume_path)
+    if not resume_path.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume file not found")
+    
+    return FileResponse(
+        path=resume_path,
+        media_type=get_mime_type(application.resume_filename),
+        filename=application.resume_filename,
+        headers={"Content-Disposition": "inline"},
+    )
+
+
+@router.get("/{job_id}/applications/{application_id}/resume/download", status_code=status.HTTP_200_OK)
+async def download_resume(
+    db: db_dependency,
+    user: user_dependency,
+    job_id: int,
+    application_id: int,
+):
+    """Download resume as attachment."""
+    application = (
+        db.query(Application)
+        .filter(Application.id == application_id, Application.job_id == job_id)
+        .first()
+    )
+    if application is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+    
+    resume_path = Path(application.resume_path)
+    if not resume_path.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume file not found")
+    
+    return FileResponse(
+        path=resume_path,
+        media_type=get_mime_type(application.resume_filename),
+        filename=application.resume_filename,
+        headers={"Content-Disposition": f"attachment; filename={application.resume_filename}"},
+    )

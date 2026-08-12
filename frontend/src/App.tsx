@@ -9,6 +9,7 @@ import { JobsPage } from '@/pages/JobsPage'
 import { CreateJobPage } from '@/pages/CreateJobPage'
 import { JobDetailsPage } from '@/pages/JobDetailsPage'
 import { ApplicantDetailsPage } from '@/pages/ApplicantDetailsPage'
+import { CandidatesPage } from '@/pages/CandidatesPage'
 import { CandidateLayout } from '@/components/layout/CandidateLayout'
 import { CandidateLoginPage } from '@/pages/CandidateLoginPage'
 import { CandidateProfilePage } from '@/pages/CandidateProfilePage'
@@ -40,6 +41,7 @@ function App() {
             <Route path="/jobs/new" element={<CreateJobPage />} />
             <Route path="/jobs/:id" element={<JobDetailsPage />} />
             <Route path="/jobs/:jobId/applicants/:applicantId" element={<ApplicantDetailsPage />} />
+            <Route path="/candidates" element={<CandidatesPage />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['candidate']}><CandidateLayout /></ProtectedRoute>}>
             <Route path="/candidate/profile" element={<CandidateProfilePage />} />

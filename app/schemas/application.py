@@ -39,3 +39,19 @@ class JobApplicantOut(BaseModel):
     status: ApplicationStatus
     applied_at: datetime
     updated_at: datetime
+
+
+class AllCandidatesOut(BaseModel):
+    id: int
+    application_id: int
+    candidate_id: int
+    name: str
+    email: str
+    job_title: str
+    job_id: int
+    resume_screening_score: Optional[int] = None
+    coding_round_score: Optional[int] = None
+    interview_score: Optional[int] = None
+    status: ApplicationStatus
+    applied_at: datetime
+
