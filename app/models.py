@@ -1,6 +1,6 @@
 from .database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy import Date
 from datetime import datetime
@@ -64,6 +64,7 @@ class Application(Base):
     resume_path = Column(String, nullable=False)
     status = Column(String, nullable=False, default="Applied")
     resume_screening_score = Column(Integer, nullable=True)
+    resume_screening_details = Column(JSONB, nullable=True)
     coding_round_score = Column(Integer, nullable=True)
     interview_score = Column(Integer, nullable=True)
     applied_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

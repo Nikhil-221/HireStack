@@ -1,6 +1,13 @@
 import { apiClient } from './client'
 import type { ApplicationStatus, JobApplicant } from '@/types/candidate'
 
+export interface ResumeScreeningDetails {
+  matched_skills: string[]
+  missing_skills: string[]
+  experience_fit: string
+  summary: string
+}
+
 export interface Candidate {
   id: number
   application_id: number
@@ -10,6 +17,7 @@ export interface Candidate {
   job_title: string
   job_id: number
   resume_screening_score: number | null
+  resume_screening_details: ResumeScreeningDetails | null
   coding_round_score: number | null
   interview_score: number | null
   status: ApplicationStatus

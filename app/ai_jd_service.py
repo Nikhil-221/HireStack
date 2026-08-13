@@ -8,6 +8,16 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
+
+def get_groq_client():
+    from openai import OpenAI
+
+    return OpenAI(
+        api_key=os.getenv("GROQ_API_KEY"),
+        base_url="https://api.groq.com/openai/v1",
+    )
+
+
 _SYSTEM_PROMPT = (
     "You are an expert technical recruiter and professional job description writer. "
     "Given details about an open role, write a clear, specific, and professional job "
@@ -101,12 +111,7 @@ def _generate_with_openai(prompt: str) -> dict:
 
 
 def _generate_with_groq(prompt: str) -> dict:
-    from openai import OpenAI
-
-    client = OpenAI(
-        api_key=os.getenv("GROQ_API_KEY"),
-        base_url="https://api.groq.com/openai/v1",
-    )
+    client = get_groq_client()
     model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
     response = client.chat.completions.create(

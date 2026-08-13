@@ -35,6 +35,13 @@ export interface CandidateApplication {
   updated_at: string
 }
 
+export interface ResumeScreeningDetails {
+  matched_skills: string[]
+  missing_skills: string[]
+  experience_fit: string
+  summary: string
+}
+
 export interface JobApplicant {
   id: number
   candidate_id: number
@@ -44,6 +51,8 @@ export interface JobApplicant {
   location: string | null
   experience: string | null
   resume_filename: string
+  resume_screening_score: number | null
+  resume_screening_details: ResumeScreeningDetails | null
   status: ApplicationStatus
   applied_at: string
   updated_at: string

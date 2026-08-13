@@ -15,6 +15,13 @@ class ApplicationStatusUpdate(BaseModel):
     status: ApplicationStatus
 
 
+class ResumeScreeningDetails(BaseModel):
+    matched_skills: list[str] = []
+    missing_skills: list[str] = []
+    experience_fit: str = ""
+    summary: str = ""
+
+
 class CandidateApplicationOut(BaseModel):
     id: int
     job_id: int
@@ -36,6 +43,8 @@ class JobApplicantOut(BaseModel):
     location: Optional[str] = None
     experience: Optional[str] = None
     resume_filename: str
+    resume_screening_score: Optional[int] = None
+    resume_screening_details: Optional[ResumeScreeningDetails] = None
     status: ApplicationStatus
     applied_at: datetime
     updated_at: datetime
@@ -50,6 +59,7 @@ class AllCandidatesOut(BaseModel):
     job_title: str
     job_id: int
     resume_screening_score: Optional[int] = None
+    resume_screening_details: Optional[ResumeScreeningDetails] = None
     coding_round_score: Optional[int] = None
     interview_score: Optional[int] = None
     status: ApplicationStatus

@@ -15,6 +15,7 @@ export function ApplicantDetailsPage() {
   const [resumeError, setResumeError] = useState<string | null>(null)
   const [isViewingResume, setIsViewingResume] = useState(false)
   const [isDownloadingResume, setIsDownloadingResume] = useState(false)
+  const [isResumeDetailsOpen, setIsResumeDetailsOpen] = useState(false)
 
   useEffect(() => {
     if (!jobId || !applicantId) {
@@ -202,6 +203,65 @@ export function ApplicantDetailsPage() {
             </Button>
           </div>
         </div>
+      </section>
+
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[.16em] text-brand-600">ATS score</p>
+            <h2 className="mt-2 text-base font-semibold text-slate-900">Resume screening</h2>
+          </div>
+          <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-right ring-1 ring-emerald-200">
+            <p className="text-xs uppercase tracking-[.16em] text-emerald-700">Overall</p>
+            <p className="mt-1 text-2xl font-bold text-emerald-800">
+              {applicant.resume_screening_score !== null ? applicant.resume_screening_score : '—'}
+            </p>
+          </div>
+        </div>
+
+        {!applicant.resume_screening_score && applicant.resume_screening_score !== 0 ? (
+          <p className="mt-4 text-sm text-amber-700">Score unavailable. Scoring is still in progress or failed.</p>
+        ) : (
+          <div className="mt-5">
+            <button
+              type="button"
+              onClick={() => setIsResumeDetailsOpen((current) => !current)}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              {isResumeDetailsOpen ? 'Hide details' : 'View details'}
+              <span aria-hidden="true">{isResumeDetailsOpen ? '−' : '+'}</span>
+            </button>
+
+            {isResumeDetailsOpen && (
+              <div className="mt-4 space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[.12em] text-slate-500">Matched skills</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(applicant.resume_screening_details?.matched_skills?.length ? applicant.resume_screening_details.matched_skills : ['No skills matched']).map((skill) => (
+                      <span key={skill} className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800">{skill}</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[.12em] text-slate-500">Missing skills</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(applicant.resume_screening_details?.missing_skills?.length ? applicant.resume_screening_details.missing_skills : ['No gaps reported']).map((skill) => (
+                      <span key={skill} className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">{skill}</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[.12em] text-slate-500">Experience fit</p>
+                  <p className="mt-2 text-sm text-slate-700">{applicant.resume_screening_details?.experience_fit || 'No experience summary available.'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[.12em] text-slate-500">Summary</p>
+                  <p className="mt-2 text-sm text-slate-700">{applicant.resume_screening_details?.summary || 'No summary available.'}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">

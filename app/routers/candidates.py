@@ -2,13 +2,14 @@ from pathlib import Path
 from typing import Annotated, List
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from starlette import status
 
 from ..database import SessionLocal
 from ..models import Application, CandidateProfile, Job, Users
 from ..schemas.application import CandidateApplicationOut
+from ..services.resume_screening_service import score_application_resume
 from ..schemas.candidate import CandidateProfileOut, CandidateProfileUpdate
 from ..schemas.job import JobOut
 from .auth import candidate_dependency
@@ -89,6 +90,7 @@ async def apply_to_job(
     user: user_dependency,
     job_id: Annotated[int, Form()],
     resume: Annotated[UploadFile, File()],
+    background_tasks: BackgroundTasks,
 ):
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user["id"]).first()
     if profile is None:
@@ -120,6 +122,7 @@ async def apply_to_job(
     db.add(application)
     db.commit()
     db.refresh(application)
+    background_tasks.add_task(score_application_resume, application.id)
     return candidate_application_out(application, job)
 
 

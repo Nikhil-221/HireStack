@@ -172,7 +172,9 @@ export function CandidatesPage() {
                   <td className="px-6 py-4 text-sm text-slate-600">{candidate.job_title}</td>
                   <td className="px-6 py-4 text-sm text-slate-600">{formatDate(candidate.applied_at)}</td>
                   <td className="px-6 py-4 text-sm text-slate-600">
-                    {candidate.resume_screening_score !== null ? candidate.resume_screening_score : 'Not scored'}
+                    {candidate.resume_screening_score !== null
+                      ? <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">{candidate.resume_screening_score}</span>
+                      : <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">Scoring in progress</span>}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600">
                     {candidate.coding_round_score !== null ? candidate.coding_round_score : 'Not scored'}
