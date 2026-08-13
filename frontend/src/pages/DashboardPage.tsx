@@ -28,21 +28,22 @@ export function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-500">Overview of your job openings.</p>
+        <p className="text-xs font-bold uppercase tracking-[.16em] text-brand-600">Recruiter workspace</p>
+        <h1 className="page-heading mt-2">Hiring overview</h1>
+        <p className="page-subtitle">A clear view of your job openings and hiring activity.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <StatCard label="Total jobs" value={counts.total} />
         <StatCard label="Open" value={counts.open} />
         <StatCard label="Draft" value={counts.draft} />
         <StatCard label="Closed" value={counts.closed} />
       </div>
 
-      <div className="rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 className="text-sm font-semibold text-slate-900">Recently created</h2>
-          <Link to="/jobs" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_12px_35px_rgba(15,23,42,.06)] ring-1 ring-slate-200/70">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+          <h2 className="text-base font-bold text-slate-900">Recently created</h2>
+          <Link to="/jobs" className="text-sm font-bold text-brand-600 hover:text-brand-500">
             View all jobs
           </Link>
         </div>
@@ -53,10 +54,10 @@ export function DashboardPage() {
         ) : (
           <ul className="divide-y divide-slate-200">
             {recentJobs.map((job) => (
-              <li key={job.id} className="flex items-center justify-between px-5 py-3">
+              <li key={job.id} className="flex items-center justify-between px-6 py-4 transition hover:bg-slate-50/80">
                 <Link
                   to={`/jobs/${job.id}`}
-                  className="text-sm font-medium text-slate-900 hover:text-indigo-600"
+                  className="text-sm font-semibold text-slate-900 hover:text-brand-600"
                 >
                   {job.title}
                 </Link>
@@ -72,9 +73,9 @@ export function DashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-slate-900">{value}</p>
+    <div className="rounded-2xl bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,.05)] ring-1 ring-slate-200/70 transition duration-200 hover:-translate-y-0.5">
+      <p className="text-xs font-bold uppercase tracking-[.12em] text-slate-400">{label}</p>
+      <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
     </div>
   )
 }

@@ -93,6 +93,16 @@ async def require_recruiter(user: user_dependency) -> dict:
 
 recruiter_dependency = Annotated[dict, Depends(require_recruiter)]
 
+async def require_candidate(user: user_dependency) -> dict:
+    if user["role"].lower() != "candidate":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized for this action"
+        )
+    return user
+
+candidate_dependency = Annotated[dict, Depends(require_candidate)]
+
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserOut)
 async def register(db: db_dependency, payload: RegisterRequest):
     new_user = Users(

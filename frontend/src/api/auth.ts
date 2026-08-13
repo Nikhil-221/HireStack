@@ -29,6 +29,7 @@ export async function login(username: string, password: string): Promise<string>
   return response.data.access_token
 }
 
+export type UserRole = 'recruiter' | 'candidate' | 'admin'
 export type RecruiterRole = 'recruiter'
 
 export interface RegisterPayload {
@@ -36,7 +37,7 @@ export interface RegisterPayload {
   email: string
   username: string
   password: string
-  role: RecruiterRole
+  role: 'recruiter' | 'candidate'
 }
 
 export async function register(payload: RegisterPayload): Promise<void> {

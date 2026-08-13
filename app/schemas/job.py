@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime
+from datetime import date, datetime
 from typing import List, Optional
 from pydantic import BaseModel, ConfigDict
 
@@ -24,10 +24,10 @@ class JobBase(BaseModel):
     qualifications: Optional[List[str]] = None
 
 class JobCreate(JobBase):
-    pass
+    deadline: date
 
 class JobUpdate(JobBase):
-    pass
+    deadline: date
 
 class JobStatusUpdate(BaseModel):
     status: JobStatus
@@ -37,14 +37,20 @@ class JobOut(JobBase):
 
     id: int
     status: JobStatus
+    deadline: Optional[date] = None
     created_at: datetime
     updated_at: datetime
 
 class GenerateJDRequest(BaseModel):
     title: str
     department: Optional[str] = None
+    location: Optional[str] = None
     employment_type: Optional[str] = None
     experience_required: Optional[str] = None
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    openings: Optional[int] = None
+    description: Optional[str] = None
 
 class GenerateJDResponse(BaseModel):
     description: str

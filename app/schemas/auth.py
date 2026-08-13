@@ -6,7 +6,7 @@ class RegisterRequest(BaseModel):
     email: str
     username: str
     password: str
-    role: Literal["recruiter"]
+    role: Literal["recruiter", "candidate"]
 
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)

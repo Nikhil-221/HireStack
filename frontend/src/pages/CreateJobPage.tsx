@@ -15,8 +15,13 @@ export function CreateJobPage() {
     const generated = await generateJobDescription({
       title: values.title,
       department: values.department || undefined,
+      location: values.location || undefined,
       employment_type: values.employment_type || undefined,
       experience_required: values.experience_required || undefined,
+      salary_min: values.salary_min.trim() ? Number(values.salary_min) : undefined,
+      salary_max: values.salary_max.trim() ? Number(values.salary_max) : undefined,
+      openings: values.openings.trim() ? Number(values.openings) : undefined,
+      description: values.description || undefined,
     })
     setValues((prev) => ({
       ...prev,
@@ -44,8 +49,9 @@ export function CreateJobPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Create Job</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="text-xs font-bold uppercase tracking-[.16em] text-brand-600">Job management</p>
+        <h1 className="page-heading mt-2">Create a new role</h1>
+        <p className="page-subtitle">
           Fill in the details manually, or generate a draft with AI first.
         </p>
       </div>
@@ -56,7 +62,7 @@ export function CreateJobPage() {
         </div>
       )}
 
-      <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <div className="rounded-2xl bg-white p-5 shadow-[0_12px_35px_rgba(15,23,42,.06)] ring-1 ring-slate-200/70 sm:p-7">
         <JobForm
           values={values}
           onChange={setValues}
