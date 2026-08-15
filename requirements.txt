@@ -10,4 +10,5 @@ openai
 python-dotenv
 openai-whisper
 requests
+pypdf
 alembic
