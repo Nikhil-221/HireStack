@@ -5,6 +5,7 @@ const navItems = [
   { to: '/candidate/jobs', label: 'Open Jobs' },
   { to: '/candidate/applications', label: 'My Applications' },
   { to: '/candidate/profile', label: 'My Profile' },
+  { to: '/candidate/notifications', label: 'Notifications' },
 ]
 
 export function CandidateLayout() {
@@ -23,7 +24,7 @@ export function CandidateLayout() {
         </div>
         <div className="border-t border-slate-100 pt-3"><button onClick={leave} className="w-full rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-500 transition hover:bg-red-50 hover:text-red-600">Log out</button></div>
       </aside>
-      <main className="min-w-0 flex-1 overflow-y-auto"><header className="flex items-center justify-between border-b border-slate-200/70 bg-white/80 px-5 py-3 backdrop-blur lg:hidden"><span className="font-bold tracking-tight text-slate-900">HireStack</span><nav className="flex items-center gap-1"><NavLink to="/candidate/jobs" className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-600">Jobs</NavLink><NavLink to="/candidate/applications" className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-600">Applications</NavLink><button onClick={leave} className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-600">Log out</button></nav></header><div className="px-5 py-7 sm:px-8 lg:px-10 lg:py-10"><Outlet /></div></main>
+      <main className="min-w-0 flex-1 overflow-y-auto"><header className="flex items-center justify-between border-b border-slate-200/70 bg-white/80 px-5 py-3 backdrop-blur lg:hidden"><span className="font-bold tracking-tight text-slate-900">HireStack</span><nav className="flex items-center gap-1"><NavLink to="/candidate/jobs" className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-600">Jobs</NavLink><NavLink to="/candidate/applications" className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-600">Applications</NavLink><NavLink to="/candidate/notifications" className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-600">Notifications</NavLink><button onClick={leave} className="rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-600">Log out</button></nav></header><div className="px-5 py-7 sm:px-8 lg:px-10 lg:py-10"><Outlet /></div></main>
     </div>
   )
 }

@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
+import { fetchCodingTests, inviteCandidate } from '@/api/codingTests'
 import { fetchJobApplicants, updateApplicationStatus, fetchResumeForView, fetchResumeForDownload } from '@/api/applications'
 import type { ApplicationStatus, JobApplicant } from '@/types/candidate'
+import type { CodingTest } from '@/types/codingTest'
 
 export function ApplicantDetailsPage() {
   const { jobId, applicantId } = useParams<{ jobId: string; applicantId: string }>()
@@ -16,6 +18,10 @@ export function ApplicantDetailsPage() {
   const [isViewingResume, setIsViewingResume] = useState(false)
   const [isDownloadingResume, setIsDownloadingResume] = useState(false)
   const [isResumeDetailsOpen, setIsResumeDetailsOpen] = useState(false)
+  const [codingTests, setCodingTests] = useState<CodingTest[]>([])
+  const [selectedCodingTestId, setSelectedCodingTestId] = useState('')
+  const [isInviting, setIsInviting] = useState(false)
+  const [inviteMessage, setInviteMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!jobId || !applicantId) {
@@ -36,6 +42,31 @@ export function ApplicantDetailsPage() {
       .catch(() => setError('Could not load applicant details.'))
       .finally(() => setIsLoading(false))
   }, [jobId, applicantId])
+
+  useEffect(() => {
+    if (!jobId) return
+    fetchCodingTests()
+      .then((tests) => {
+        const matchingTests = tests.filter((test) => test.job_id === Number(jobId))
+        setCodingTests(matchingTests)
+        setSelectedCodingTestId((current) => current || (matchingTests[0] ? String(matchingTests[0].id) : ''))
+      })
+      .catch(() => setInviteMessage('Could not load coding tests for this job.'))
+  }, [jobId])
+
+  const handleInvite = async () => {
+    if (!applicant || !selectedCodingTestId) return
+    setIsInviting(true)
+    setInviteMessage(null)
+    try {
+      await inviteCandidate(Number(selectedCodingTestId), applicant.candidate_id)
+      setInviteMessage(`Invite sent to ${applicant.name}.`)
+    } catch {
+      setInviteMessage('Could not send the coding test invite.')
+    } finally {
+      setIsInviting(false)
+    }
+  }
 
   const handleStatusChange = async (status: ApplicationStatus) => {
     if (!applicant || !jobId) return
@@ -269,10 +300,22 @@ export function ApplicantDetailsPage() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <p className="text-sm font-semibold text-slate-900">Send Coding Round Link</p>
-            <p className="mt-2 text-sm text-slate-600">Placeholder UI reserved for sending a coding round link to this candidate.</p>
-            <Button type="button" variant="ghost" className="mt-4 border border-slate-200 text-slate-700 hover:bg-slate-100">
-              Prepare link
-            </Button>
+            <p className="mt-2 text-sm text-slate-600">Choose a coding test tied to this job and send the candidate an invitation.</p>
+            {inviteMessage && <p className={`mt-3 text-sm ${inviteMessage.startsWith('Invite sent') ? 'text-emerald-700' : 'text-red-700'}`}>{inviteMessage}</p>}
+            {codingTests.length > 0 ? <>
+              <div className="mt-4">
+                <Select
+                  id="coding-test-to-invite"
+                  label="Coding test"
+                  options={codingTests.map((test) => ({ value: String(test.id), label: `${test.title} · ${test.duration_minutes} min` }))}
+                  value={selectedCodingTestId}
+                  onChange={(event) => setSelectedCodingTestId(event.target.value)}
+                />
+              </div>
+              <Button type="button" className="mt-4" onClick={handleInvite} disabled={isInviting || !selectedCodingTestId}>
+                {isInviting ? 'Sending…' : 'Send invite'}
+              </Button>
+            </> : <p className="mt-4 text-sm text-slate-500">No coding tests are available for this job yet.</p>}
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
             <p className="text-sm font-semibold text-slate-900">Send Interview Link</p>

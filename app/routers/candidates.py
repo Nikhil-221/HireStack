@@ -7,7 +7,9 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from ..database import SessionLocal
-from ..models import Application, CandidateProfile, Job, Users
+from ..models import Application, CandidateProfile, Job, Notification, Users
+from ..schemas.notification import NotificationOut
+from ..services.coding_invite_service import CodingInviteService
 from ..schemas.application import CandidateApplicationOut
 from ..services.resume_screening_service import score_application_resume
 from ..schemas.candidate import CandidateProfileOut, CandidateProfileUpdate
@@ -136,6 +138,20 @@ async def get_my_applications(db: db_dependency, user: user_dependency):
         .all()
     )
     return [candidate_application_out(application, job) for application, job in rows]
+
+
+@router.get("/notifications", response_model=List[NotificationOut])
+async def get_my_notifications(db: db_dependency, user: user_dependency):
+    return CodingInviteService(db).list_notifications(user["id"])
+
+
+@router.patch("/notifications/{notification_id}/read", response_model=NotificationOut)
+async def mark_notification_read(
+    db: db_dependency,
+    user: user_dependency,
+    notification_id: int,
+):
+    return CodingInviteService(db).mark_notification_read(notification_id, user["id"])
 
 
 def candidate_application_out(application: Application, job: Job) -> dict:

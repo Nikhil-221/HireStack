@@ -5,6 +5,8 @@ const navItems = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/jobs', label: 'Jobs' },
   { to: '/candidates', label: 'Candidates' },
+  { to: '/question-bank', label: 'Question Bank' },
+  { to: '/coding-tests', label: 'Coding Tests' },
 ]
 
 export function Sidebar() {
