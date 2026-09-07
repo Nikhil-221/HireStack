@@ -21,7 +21,8 @@ import { CandidateJobsPage } from '@/pages/CandidateJobsPage'
 import { CandidateJobDetailsPage } from '@/pages/CandidateJobDetailsPage'
 import { CandidateApplicationsPage } from '@/pages/CandidateApplicationsPage'
 import { CandidateNotificationsPage } from '@/pages/CandidateNotificationsPage'
-import { TestAttemptPlaceholderPage } from '@/pages/TestAttemptPlaceholderPage'
+import { TestAttemptPage } from '@/pages/TestAttemptPage'
+import { TestSubmittedPage } from '@/pages/TestSubmittedPage'
 import { HomePage } from '@/pages/HomePage'
 import { TopNav } from '@/components/layout/TopNav'
 
@@ -62,7 +63,8 @@ function App() {
             <Route path="/candidate/applications" element={<CandidateApplicationsPage />} />
             <Route path="/candidate/notifications" element={<CandidateNotificationsPage />} />
           </Route>
-          <Route path="/test/attempt/:token" element={<ProtectedRoute allowedRoles={['candidate']}><TestAttemptPlaceholderPage /></ProtectedRoute>} />
+          <Route path="/test/attempt/:token/submitted" element={<ProtectedRoute allowedRoles={['candidate']}><TestSubmittedPage /></ProtectedRoute>} />
+          <Route path="/test/attempt/:token" element={<ProtectedRoute allowedRoles={['candidate']}><TestAttemptPage /></ProtectedRoute>} />
           <Route path="/" element={<HomePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

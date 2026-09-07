@@ -20,7 +20,7 @@ export function TopNav() {
     navigate('/', { replace: true })
   }
 
-  if (location.pathname === '/') return null
+  if (location.pathname === '/' || location.pathname.startsWith('/test/attempt/')) return null
 
   return (
     <header className={`sticky top-0 z-50 border-b backdrop-blur ${isDark ? 'border-white/10 bg-slate-950/85 text-white' : 'border-slate-200/80 bg-white/85 text-slate-900'}`}>
