@@ -10,12 +10,19 @@ import { CreateJobPage } from '@/pages/CreateJobPage'
 import { JobDetailsPage } from '@/pages/JobDetailsPage'
 import { ApplicantDetailsPage } from '@/pages/ApplicantDetailsPage'
 import { CandidatesPage } from '@/pages/CandidatesPage'
+import { QuestionBankPage } from '@/pages/QuestionBankPage'
+import { CodingQuestionFormPage } from '@/pages/CodingQuestionFormPage'
+import { CodingTestsPage } from '@/pages/CodingTestsPage'
+import { CodingTestFormPage } from '@/pages/CodingTestFormPage'
 import { CandidateLayout } from '@/components/layout/CandidateLayout'
 import { CandidateLoginPage } from '@/pages/CandidateLoginPage'
 import { CandidateProfilePage } from '@/pages/CandidateProfilePage'
 import { CandidateJobsPage } from '@/pages/CandidateJobsPage'
 import { CandidateJobDetailsPage } from '@/pages/CandidateJobDetailsPage'
 import { CandidateApplicationsPage } from '@/pages/CandidateApplicationsPage'
+import { CandidateNotificationsPage } from '@/pages/CandidateNotificationsPage'
+import { TestAttemptPage } from '@/pages/TestAttemptPage'
+import { TestSubmittedPage } from '@/pages/TestSubmittedPage'
 import { HomePage } from '@/pages/HomePage'
 import { TopNav } from '@/components/layout/TopNav'
 
@@ -42,13 +49,22 @@ function App() {
             <Route path="/jobs/:id" element={<JobDetailsPage />} />
             <Route path="/jobs/:jobId/applicants/:applicantId" element={<ApplicantDetailsPage />} />
             <Route path="/candidates" element={<CandidatesPage />} />
+            <Route path="/question-bank" element={<QuestionBankPage />} />
+            <Route path="/question-bank/new" element={<CodingQuestionFormPage />} />
+            <Route path="/question-bank/:id/edit" element={<CodingQuestionFormPage />} />
+            <Route path="/coding-tests" element={<CodingTestsPage />} />
+            <Route path="/coding-tests/new" element={<CodingTestFormPage />} />
+            <Route path="/coding-tests/:id/edit" element={<CodingTestFormPage />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['candidate']}><CandidateLayout /></ProtectedRoute>}>
             <Route path="/candidate/profile" element={<CandidateProfilePage />} />
             <Route path="/candidate/jobs" element={<CandidateJobsPage />} />
             <Route path="/candidate/jobs/:id" element={<CandidateJobDetailsPage />} />
             <Route path="/candidate/applications" element={<CandidateApplicationsPage />} />
+            <Route path="/candidate/notifications" element={<CandidateNotificationsPage />} />
           </Route>
+          <Route path="/test/attempt/:token/submitted" element={<ProtectedRoute allowedRoles={['candidate']}><TestSubmittedPage /></ProtectedRoute>} />
+          <Route path="/test/attempt/:token" element={<ProtectedRoute allowedRoles={['candidate']}><TestAttemptPage /></ProtectedRoute>} />
           <Route path="/" element={<HomePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
