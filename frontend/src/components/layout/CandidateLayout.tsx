@@ -11,7 +11,7 @@ const navItems = [
 export function CandidateLayout() {
   const { logout } = useAuth()
   const navigate = useNavigate()
-  const leave = () => { logout(); navigate('/', { replace: true }) }
+  const leave = () => { navigate('/', { replace: true }); logout() }
   return (
     <div className="app-surface flex min-h-screen">
       <aside className="hidden min-h-screen w-64 shrink-0 flex-col justify-between border-r border-slate-200/80 bg-white/90 p-3 backdrop-blur lg:flex">

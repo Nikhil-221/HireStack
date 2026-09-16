@@ -18,8 +18,8 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       clearToken()
-      if (!window.location.pathname.startsWith('/login')) {
-        window.location.href = '/login'
+      if (window.location.pathname !== '/') {
+        window.location.href = '/'
       }
     }
     return Promise.reject(error)
