@@ -48,3 +48,18 @@ class CodingQuestionOut(BaseModel):
     starter_code: Optional[Dict[str, str]] = None
     created_at: datetime
     test_cases: List[TestCaseOut]
+
+
+class CodingQuestionGenerateRequest(BaseModel):
+    count: int = Field(default=2, ge=1, le=2)
+
+
+class CodingQuestionGenerateResponse(BaseModel):
+    questions: List["CodingQuestionGenerateItem"]
+
+
+class CodingQuestionGenerateItem(BaseModel):
+    title: str
+    description: str
+    difficulty: CodingQuestionDifficulty
+    test_cases: List[TestCasePayload]

@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
 
 class CodingTestCreate(BaseModel):
-    job_id: PositiveInt
+    job_id: Optional[PositiveInt] = None
     title: str = Field(min_length=1)
     duration_minutes: PositiveInt
     question_ids: List[PositiveInt] = Field(default_factory=list)
@@ -27,8 +27,8 @@ class CodingTestQuestionOut(BaseModel):
 
 class CodingTestSummaryOut(BaseModel):
     id: int
-    job_id: int
-    job_title: str
+    job_id: Optional[int]
+    job_title: Optional[str]
     title: str
     duration_minutes: int
     question_count: int

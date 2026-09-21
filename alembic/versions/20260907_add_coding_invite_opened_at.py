@@ -17,9 +17,9 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "coding_test_invites",
-        sa.Column("opened_at", sa.DateTime(timezone=True), nullable=True),
+    op.execute(
+        "ALTER TABLE coding_test_invites "
+        "ADD COLUMN IF NOT EXISTS opened_at TIMESTAMP WITH TIME ZONE"
     )
 
 

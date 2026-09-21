@@ -116,7 +116,7 @@ export function QuestionBankPage() {
                     <td className="whitespace-nowrap px-5 py-4">
                       <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold capitalize text-slate-700">{question.difficulty}</span>
                     </td>
-                    <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{question.job_title ?? 'Unassigned'}</td>
+                    <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{question.job_title ?? 'Applicable to all jobs'}</td>
                     <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{question.test_cases.length}</td>
                     <td className="whitespace-nowrap px-5 py-4 text-right">
                       <div className="flex justify-end gap-2">

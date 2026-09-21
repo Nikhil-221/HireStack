@@ -1,5 +1,6 @@
 from typing import List, Optional, Sequence
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from ..models import CodingQuestion, CodingQuestionDifficulty, Job, TestCase
@@ -25,7 +26,7 @@ class CodingQuestionRepository:
     ) -> List[CodingQuestion]:
         query = self.db.query(CodingQuestion)
         if job_id is not None:
-            query = query.filter(CodingQuestion.job_id == job_id)
+            query = query.filter(or_(CodingQuestion.job_id == job_id, CodingQuestion.job_id.is_(None)))
         if difficulty is not None:
             query = query.filter(CodingQuestion.difficulty == difficulty)
         return query.order_by(CodingQuestion.created_at.desc(), CodingQuestion.id.desc()).all()

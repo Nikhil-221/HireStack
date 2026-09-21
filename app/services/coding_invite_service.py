@@ -43,10 +43,11 @@ class CodingInviteService:
             status=CodingTestInviteStatus.NOT_STARTED,
             expires_at=now + timedelta(days=7),
         )
+        job_title = job.title if job is not None else "all jobs"
         notification = Notification(
             candidate_id=candidate.id,
             type=NotificationType.CODING_TEST,
-            title=f"Coding round invitation for {job.title}",
+            title=f"Coding round invitation for {job_title}",
             message=f"You have been invited to complete the coding test \"{coding_test.title}\".",
             related_token=token,
         )

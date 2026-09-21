@@ -1,6 +1,6 @@
 from typing import Annotated, List, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -8,6 +8,8 @@ from ..database import SessionLocal
 from ..models import CodingQuestionDifficulty
 from ..schemas.coding_question import (
     CodingQuestionCreate,
+    CodingQuestionGenerateRequest,
+    CodingQuestionGenerateResponse,
     CodingQuestionOut,
     CodingQuestionUpdate,
 )
@@ -40,6 +42,23 @@ async def create_coding_question(
     payload: CodingQuestionCreate,
 ):
     return CodingQuestionService(db).create_question(payload)
+
+
+@router.post("/generate", status_code=status.HTTP_200_OK, response_model=CodingQuestionGenerateResponse)
+async def generate_coding_question(
+    db: db_dependency,
+    user: user_dependency,
+    payload: CodingQuestionGenerateRequest,
+):
+    try:
+        return CodingQuestionService(db).generate_questions(payload.count)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Could not generate a coding question: {exc}",
+        ) from exc
 
 
 @router.get("", status_code=status.HTTP_200_OK, response_model=List[CodingQuestionOut])

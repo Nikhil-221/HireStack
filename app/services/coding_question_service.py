@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from starlette import status
 
+from ..ai_coding_question_service import generate_coding_questions
 from ..models import CodingQuestion, CodingQuestionDifficulty, Job
 from ..repositories.coding_question_repository import CodingQuestionRepository
 from ..schemas.coding_question import CodingQuestionCreate, CodingQuestionUpdate
@@ -21,6 +22,9 @@ class CodingQuestionService:
             [test_case.model_dump() for test_case in payload.test_cases],
         )
         return self._serialize(question)
+
+    def generate_questions(self, count: int) -> dict:
+        return {"questions": generate_coding_questions(count)}
 
     def list_questions(
         self,
