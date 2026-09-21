@@ -47,7 +47,7 @@ export function ApplicantDetailsPage() {
     if (!jobId) return
     fetchCodingTests()
       .then((tests) => {
-        const matchingTests = tests.filter((test) => test.job_id === Number(jobId))
+        const matchingTests = tests.filter((test) => test.job_id === null || test.job_id === Number(jobId))
         setCodingTests(matchingTests)
         setSelectedCodingTestId((current) => current || (matchingTests[0] ? String(matchingTests[0].id) : ''))
       })

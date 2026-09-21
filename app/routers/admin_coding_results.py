@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -51,7 +52,12 @@ async def get_candidates_overview(db: db_dependency, user: user_dependency, job_
         .order_by(Application.applied_at.desc())
         .all()
     )
-    test_ids = [test.id for test in db.query(CodingTest).filter(CodingTest.job_id == job_id).all()]
+    test_ids = [
+        test.id
+        for test in db.query(CodingTest)
+        .filter(or_(CodingTest.job_id == job_id, CodingTest.job_id.is_(None)))
+        .all()
+    ]
     invites = (
         db.query(CodingTestInvite, CodingTest)
         .join(CodingTest, CodingTest.id == CodingTestInvite.coding_test_id)

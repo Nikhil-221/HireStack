@@ -8,8 +8,8 @@ export interface CodingTestQuestion {
 
 export interface CodingTest {
   id: number
-  job_id: number
-  job_title: string
+  job_id: number | null
+  job_title: string | null
   title: string
   duration_minutes: number
   question_count: number
@@ -18,7 +18,7 @@ export interface CodingTest {
 }
 
 export interface CodingTestPayload {
-  job_id: number
+  job_id: number | null
   title: string
   duration_minutes: number
   question_ids: number[]

@@ -3,11 +3,17 @@ import type {
   CodingQuestion,
   CodingQuestionDifficulty,
   CodingQuestionPayload,
+  GeneratedCodingQuestionsResponse,
 } from '@/types/codingQuestion'
 
 interface CodingQuestionFilters {
   job_id?: number
   difficulty?: CodingQuestionDifficulty
+}
+
+export async function generateCodingQuestions(count = 2): Promise<GeneratedCodingQuestionsResponse> {
+  const response = await apiClient.post<GeneratedCodingQuestionsResponse>('/admin/coding-questions/generate', { count })
+  return response.data
 }
 
 export async function fetchCodingQuestions(filters: CodingQuestionFilters = {}): Promise<CodingQuestion[]> {

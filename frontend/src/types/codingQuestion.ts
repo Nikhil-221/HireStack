@@ -33,3 +33,14 @@ export interface CodingQuestionPayload {
   starter_code: Record<string, string> | null
   test_cases: CodingTestCasePayload[]
 }
+
+export interface GeneratedCodingQuestion {
+  title: string
+  description: string
+  difficulty: Exclude<CodingQuestionDifficulty, 'hard'>
+  test_cases: CodingTestCasePayload[]
+}
+
+export interface GeneratedCodingQuestionsResponse {
+  questions: GeneratedCodingQuestion[]
+}

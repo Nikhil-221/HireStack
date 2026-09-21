@@ -24,13 +24,11 @@ import { CandidateNotificationsPage } from '@/pages/CandidateNotificationsPage'
 import { TestAttemptPage } from '@/pages/TestAttemptPage'
 import { TestSubmittedPage } from '@/pages/TestSubmittedPage'
 import { HomePage } from '@/pages/HomePage'
-import { TopNav } from '@/components/layout/TopNav'
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <TopNav />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
