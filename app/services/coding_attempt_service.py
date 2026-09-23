@@ -66,6 +66,21 @@ class CodingAttemptService:
         self.db.commit()
         return {"status": invite.status.value}
 
+    def get_recording_invite(self, token: str, candidate_id: int) -> CodingTestInvite:
+        invite = (
+            self.db.query(CodingTestInvite)
+            .filter(
+                CodingTestInvite.token == token,
+                CodingTestInvite.candidate_id == candidate_id,
+            )
+            .first()
+        )
+        if invite is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Test invite not found")
+        if invite.status == CodingTestInviteStatus.COMPLETED:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This test has already been completed")
+        return invite
+
     def submit(self, token: str, candidate_id: int, question_id: int, code: str, language: str) -> dict:
         invite, coding_test = self._get_active_invite(token, candidate_id)
         self._get_question_for_test(coding_test.id, question_id)

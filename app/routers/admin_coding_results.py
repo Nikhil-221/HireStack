@@ -1,7 +1,9 @@
 from collections import defaultdict
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from starlette import status
@@ -115,6 +117,7 @@ async def get_coding_submission(db: db_dependency, user: user_dependency, submis
         {**result, "is_sample": test_case.is_sample}
         for result, test_case in zip(evaluation["results"], test_cases)
     ]
+    question_statuses = _question_statuses(db, invite)
     return {
         "id": submission.id,
         "candidate": {"id": candidate.id, "name": candidate.name, "email": candidate.email},
@@ -126,8 +129,21 @@ async def get_coding_submission(db: db_dependency, user: user_dependency, submis
         "passed_cases": sum(1 for result in evaluation["results"] if result["passed"]),
         "total_cases": len(evaluation["results"]),
         "submitted_at": submission.submitted_at,
+        "has_recording": invite.recording_path is not None,
+        "question_statuses": question_statuses,
         "results": results,
     }
+
+
+@router.get("/coding-test-invites/{invite_id}/recording")
+async def get_coding_recording(db: db_dependency, user: user_dependency, invite_id: int):
+    invite = db.query(CodingTestInvite).filter(CodingTestInvite.id == invite_id).first()
+    if invite is None or not invite.recording_path:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recording not found")
+    recording_path = Path(invite.recording_path)
+    if not recording_path.is_file():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recording file not found")
+    return FileResponse(recording_path, media_type="video/webm", filename=recording_path.name)
 
 
 def _candidate_overview(
@@ -148,18 +164,20 @@ def _candidate_overview(
         latest_by_question: dict[int, CodingSubmission] = {}
         for submission in submissions:
             latest_by_question.setdefault(submission.question_id, submission)
-        passed = sum(submission.passed_cases for submission in latest_by_question.values())
-        total = sum(submission.total_cases for submission in latest_by_question.values())
+        question_statuses = _question_statuses(db, invite)
+        accepted_questions = sum(question["status"] == "accepted" for question in question_statuses)
+        total_questions = len(question_statuses)
         coding_tests.append(
             {
                 "test_id": test.id,
                 "test_title": test.title,
                 "invite_id": invite.id,
                 "status": invite.status.value,
-                "score": round(passed * 100 / total) if total else None,
-                "passed_cases": passed if total else None,
-                "total_cases": total if total else None,
+                "score": round(accepted_questions * 100 / total_questions) if total_questions else None,
+                "passed_cases": accepted_questions if total_questions else None,
+                "total_cases": total_questions if total_questions else None,
                 "submission_ids": [submission.id for submission in latest_by_question.values()],
+                "question_statuses": question_statuses,
             }
         )
     return {
@@ -174,3 +192,32 @@ def _candidate_overview(
         "coding_tests": coding_tests,
         "interview_score": application.interview_score,
     }
+
+
+def _question_statuses(db: Session, invite: CodingTestInvite) -> list[dict]:
+    questions = (
+        db.query(CodingQuestion)
+        .join(CodingTestQuestion, CodingTestQuestion.coding_question_id == CodingQuestion.id)
+        .filter(CodingTestQuestion.coding_test_id == invite.coding_test_id)
+        .order_by(CodingTestQuestion.id)
+        .all()
+    )
+    submissions = (
+        db.query(CodingSubmission)
+        .filter(CodingSubmission.invite_id == invite.id)
+        .order_by(CodingSubmission.submitted_at.desc(), CodingSubmission.id.desc())
+        .all()
+    )
+    latest_by_question: dict[int, CodingSubmission] = {}
+    for submission in submissions:
+        latest_by_question.setdefault(submission.question_id, submission)
+
+    return [
+        {
+            "id": question.id,
+            "title": question.title,
+            "status": latest_by_question[question.id].status.value if question.id in latest_by_question else "skipped",
+            "submission_id": latest_by_question[question.id].id if question.id in latest_by_question else None,
+        }
+        for question in questions
+    ]

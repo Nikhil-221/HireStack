@@ -169,6 +169,7 @@ class CodingTestInvite(Base):
     )
     expires_at = Column(DateTime(timezone=True), nullable=False)
     opened_at = Column(DateTime(timezone=True), nullable=True)
+    recording_path = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 

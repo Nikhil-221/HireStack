@@ -10,3 +10,8 @@ export async function fetchCodingSubmissionDetail(submissionId: number): Promise
   const response = await apiClient.get<CodingSubmissionDetail>(`/admin/coding-submissions/${submissionId}`)
   return response.data
 }
+
+export async function fetchCodingRecording(inviteId: number): Promise<Blob> {
+  const response = await apiClient.get(`/admin/coding-test-invites/${inviteId}/recording`, { responseType: 'blob' })
+  return response.data
+}

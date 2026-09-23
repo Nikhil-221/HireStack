@@ -1,7 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from pathlib import Path
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
+from starlette import status
 
 from ..database import SessionLocal
 from ..schemas.coding_attempt import CodingAttemptPayload
@@ -10,6 +14,7 @@ from .auth import candidate_dependency
 
 
 router = APIRouter(prefix="/candidate/test-attempt", tags=["candidate test attempts"])
+VIDEO_DIRECTORY = Path("videos")
 
 
 def get_db():
@@ -64,3 +69,25 @@ async def submit_test_attempt(
 @router.post("/{token}/end")
 async def end_test_attempt(db: db_dependency, user: user_dependency, token: str):
     return CodingAttemptService(db).end(token, user["id"])
+
+
+@router.post("/{token}/upload-recording")
+async def upload_test_recording(
+    db: db_dependency,
+    user: user_dependency,
+    token: str,
+    recording: UploadFile = File(...),
+):
+    if recording.content_type not in {"video/webm", "video/webm;codecs=vp8,opus", "video/webm;codecs=vp9,opus"}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Recording must be a WebM video")
+
+    invite = CodingAttemptService(db).get_recording_invite(token, user["id"])
+    VIDEO_DIRECTORY.mkdir(parents=True, exist_ok=True)
+    file_path = VIDEO_DIRECTORY / f"{uuid4()}.webm"
+    with file_path.open("wb") as destination:
+        while chunk := await recording.read(1024 * 1024):
+            destination.write(chunk)
+
+    invite.recording_path = str(file_path)
+    db.commit()
+    return {"recording_path": str(file_path)}

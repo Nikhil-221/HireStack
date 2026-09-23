@@ -12,7 +12,7 @@ import { jobToFormValues, formValuesToPayload } from '@/utils/job'
 import type { Job, JobFormValues, JobStatus } from '@/types/job'
 import { updateApplicationStatus } from '@/api/applications'
 import type { ApplicationStatus } from '@/types/candidate'
-import { fetchCodingSubmissionDetail, fetchJobCandidatesOverview } from '@/api/codingResults'
+import { fetchCodingRecording, fetchCodingSubmissionDetail, fetchJobCandidatesOverview } from '@/api/codingResults'
 import type { CodingSubmissionDetail, JobCandidateOverviewRow } from '@/types/codingResults'
 
 const statusOptions: { value: JobStatus; label: string }[] = [
@@ -243,6 +243,7 @@ export function JobDetailsPage() {
           onClose={() => { setSelectedSubmission(null); setSubmissionError(null) }}
         />
       )}
+      {selectedSubmission && <RecordingPlayer inviteId={selectedSubmission.invite_id} hasRecording={selectedSubmission.has_recording} questionStatuses={selectedSubmission.question_statuses} />}
 
       <ConfirmDialog
         open={showDeleteConfirm}
@@ -334,6 +335,27 @@ function SubmissionDetailDialog({
 
 function DetailValue({ label, value }: { label: string; value: string }) {
   return <div className="mt-3"><p className="text-[11px] font-bold uppercase tracking-[.1em] text-slate-400">{label}</p><pre className="mt-1 max-h-20 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 px-2 py-1.5 font-mono text-xs text-slate-700">{value}</pre></div>
+}
+
+function RecordingPlayer({ inviteId, hasRecording, questionStatuses }: { inviteId: number; hasRecording: boolean; questionStatuses: CodingSubmissionDetail['question_statuses'] }) {
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    let objectUrl: string | null = null
+    if (hasRecording) {
+      fetchCodingRecording(inviteId).then((blob) => {
+        objectUrl = URL.createObjectURL(blob)
+        setRecordingUrl(objectUrl)
+      }).catch(() => setRecordingUrl(null))
+    } else {
+      setRecordingUrl(null)
+    }
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [hasRecording, inviteId])
+
+  return <div className="fixed bottom-6 right-6 z-[60] w-80 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl"><p className="text-xs font-bold uppercase tracking-[.12em] text-slate-500">Question attempts</p><div className="mt-2 space-y-1">{questionStatuses.map((question) => <div key={question.id} className="flex items-center justify-between gap-2 text-xs"><span className="truncate text-slate-700">{question.title}</span><span className={question.status === 'skipped' ? 'font-semibold text-slate-400' : question.status === 'accepted' ? 'font-semibold text-emerald-600' : 'font-semibold text-amber-600'}>{question.status === 'skipped' ? 'Skipped' : question.status.replaceAll('_', ' ')}</span></div>)}</div>{hasRecording && <><p className="mt-4 text-xs font-bold uppercase tracking-[.12em] text-slate-500">Session recording</p>{recordingUrl ? <video controls src={recordingUrl} className="mt-3 aspect-video w-full rounded-lg bg-black" /> : <p className="mt-2 text-sm text-slate-500">Loading recording…</p>}</>}</div>
 }
 
 const applicationStatusOptions: { value: ApplicationStatus; label: string }[] = [

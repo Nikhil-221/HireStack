@@ -2,7 +2,7 @@ import Editor from '@monaco-editor/react'
 import axios from 'axios'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { endCodingAttempt, fetchCodingAttempt, runCodingAttempt, submitCodingAttempt } from '@/api/codingAttempts'
+import { endCodingAttempt, fetchCodingAttempt, runCodingAttempt, submitCodingAttempt, uploadCodingAttemptRecording } from '@/api/codingAttempts'
 import { Button } from '@/components/ui/Button'
 import type { CodingAttempt, CodingAttemptQuestion, CodingAttemptResult } from '@/types/codingAttempt'
 
@@ -27,9 +27,14 @@ export function TestAttemptPage() {
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null)
   const [timedOut, setTimedOut] = useState(false)
   const [isFullscreenWarningVisible, setIsFullscreenWarningVisible] = useState(false)
+  const [cameraError, setCameraError] = useState<string | null>(null)
+  const [isCameraReady, setIsCameraReady] = useState(false)
   const autoSubmitted = useRef(false)
   const serverOffset = useRef(0)
   const submitCurrentRef = useRef<() => Promise<void>>(async () => undefined)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const recorderRef = useRef<MediaRecorder | null>(null)
+  const recordingChunksRef = useRef<Blob[]>([])
 
   useEffect(() => {
     if (isLoading || loadError) return
@@ -43,6 +48,44 @@ export function TestAttemptPage() {
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
   }, [isLoading, loadError])
+
+  useEffect(() => {
+    if (isLoading || loadError || !attempt) return
+    let isCancelled = false
+
+    const startRecording = async () => {
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+        setCameraError('Camera recording is required for this assessment, but this browser does not support it.')
+        return
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        if (isCancelled) {
+          stream.getTracks().forEach((track) => track.stop())
+          return
+        }
+        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm'
+        const recorder = new MediaRecorder(stream, { mimeType })
+        mediaStreamRef.current = stream
+        recorderRef.current = recorder
+        recordingChunksRef.current = []
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) recordingChunksRef.current.push(event.data)
+        }
+        recorder.start(1000)
+        setIsCameraReady(true)
+      } catch {
+        setCameraError('Camera and microphone access is required for this assessment. Please allow access and reload the test.')
+      }
+    }
+
+    void startRecording()
+    return () => {
+      isCancelled = true
+      recorderRef.current?.stop()
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop())
+    }
+  }, [attempt, isLoading, loadError])
 
   useEffect(() => {
     if (!token) {
@@ -138,6 +181,7 @@ export function TestAttemptPage() {
     setIsEnding(true)
     setActionError(null)
     try {
+      await stopRecordingAndUpload(token)
       await endCodingAttempt(token)
       if (document.fullscreenElement) await document.exitFullscreen()
       navigate(`/test/attempt/${token}/submitted`, { replace: true })
@@ -145,6 +189,21 @@ export function TestAttemptPage() {
       setActionError(getActionError(error))
       setIsEnding(false)
     }
+  }
+
+  const stopRecordingAndUpload = async (attemptToken: string) => {
+    const recorder = recorderRef.current
+    if (!recorder) return
+    const recordingBlob = recorder.state === 'inactive'
+      ? new Blob(recordingChunksRef.current, { type: recorder.mimeType || 'video/webm' })
+      : await new Promise<Blob>((resolve) => {
+          recorder.addEventListener('stop', () => resolve(new Blob(recordingChunksRef.current, { type: recorder.mimeType || 'video/webm' })), { once: true })
+          recorder.stop()
+        })
+    await uploadCodingAttemptRecording(attemptToken, recordingBlob)
+    mediaStreamRef.current?.getTracks().forEach((track) => track.stop())
+    recorderRef.current = null
+    mediaStreamRef.current = null
   }
 
   if (isLoading) return <AttemptState title="Loading assessment" message="Preparing your coding workspace…" />
@@ -160,6 +219,7 @@ export function TestAttemptPage() {
       </header>
 
       {isFullscreenWarningVisible && <div className="border-b border-amber-300/30 bg-amber-300/10 px-4 py-2 text-center text-sm font-semibold text-amber-100">You have exited fullscreen. Return to fullscreen to keep the assessment distraction-free.</div>}
+      {cameraError && <div className="border-b border-red-300/30 bg-red-300/10 px-4 py-2 text-center text-sm font-semibold text-red-100">{cameraError}</div>}
       {timedOut && <div className="border-b border-amber-300/30 bg-amber-300/10 px-4 py-2 text-center text-sm font-semibold text-amber-100">Time is up. Your current code was submitted automatically.</div>}
       <div className="grid min-h-0 min-w-0 flex-1 overflow-hidden lg:grid-cols-[220px_minmax(0,1fr)_320px]">
         <aside className="flex min-h-0 min-w-0 flex-col overflow-y-auto border-b border-white/10 bg-[#131d2d] p-4 lg:border-b-0 lg:border-r">
@@ -177,6 +237,7 @@ export function TestAttemptPage() {
 
         <aside className="flex min-h-0 min-w-0 flex-col overflow-hidden border-t border-white/10 bg-[#131d2d] lg:border-l lg:border-t-0"><div className="shrink-0 border-b border-white/10 px-5 py-4"><p className="text-xs font-bold uppercase tracking-[.14em] text-slate-400">Sample results</p><p className="mt-1 text-sm text-slate-500">Visible cases only. Hidden cases run on submit.</p></div>{actionError && <p className="m-4 shrink-0 rounded-xl border border-red-300/20 bg-red-400/10 px-3 py-2 text-sm text-red-200">{actionError}</p>}{result && <div className="min-h-0 flex-1 overflow-y-auto p-4"><div className={`rounded-xl border px-4 py-3 ${result.verdict === 'accepted' ? 'border-emerald-300/20 bg-emerald-300/10' : 'border-amber-300/20 bg-amber-300/10'}`}><p className="text-xs font-bold uppercase tracking-[.12em] text-slate-400">Verdict</p><p className="mt-1 text-lg font-bold capitalize text-white">{formatVerdict(result.verdict)}</p></div><div className="mt-4 flex flex-col gap-3">{result.results.map((testCase, index) => <article key={`${testCase.input}-${index}`} className="rounded-xl border border-white/8 bg-white/[.03] p-3"><div className="flex items-center justify-between"><span className="text-xs font-bold text-slate-400">Case {index + 1}</span><span className={testCase.passed ? 'text-emerald-300' : 'text-red-300'}>{testCase.passed ? 'Passed' : 'Failed'}</span></div><ResultValue label="Input" value={testCase.input} /><ResultValue label="Expected" value={testCase.expected} /><ResultValue label="Actual" value={testCase.actual || 'No output'} /></article>)}</div></div>}{!result && !actionError && <div className="grid flex-1 place-items-center p-6 text-center"><div><div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/5 text-xl text-cyan-300">⌘</div><p className="mt-4 text-sm font-semibold text-slate-300">Run the sample cases to see results.</p></div></div>}<div className="shrink-0 border-t border-white/10 p-4"><p className="text-xs leading-5 text-slate-500">Opened {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(attempt.opened_at))}</p></div></aside>
       </div>
+      {isCameraReady && <video ref={(video) => { if (video) video.srcObject = mediaStreamRef.current }} autoPlay muted playsInline className="fixed bottom-5 right-5 z-[70] h-24 w-40 rounded-xl border-2 border-white/30 bg-black object-cover shadow-2xl" aria-label="Camera preview" />}
     </div>
   )
 }

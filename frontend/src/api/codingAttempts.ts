@@ -20,3 +20,9 @@ export async function endCodingAttempt(token: string): Promise<{ status: string 
   const response = await apiClient.post<{ status: string }>(`/candidate/test-attempt/${token}/end`)
   return response.data
 }
+
+export async function uploadCodingAttemptRecording(token: string, blob: Blob): Promise<void> {
+  const formData = new FormData()
+  formData.append('recording', blob, 'coding-test.webm')
+  await apiClient.post(`/candidate/test-attempt/${token}/upload-recording`, formData)
+}

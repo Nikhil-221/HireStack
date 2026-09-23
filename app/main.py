@@ -36,3 +36,4 @@ Base.metadata.create_all(bind=engine)
 with engine.begin() as connection:
     connection.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS deadline DATE"))
     connection.execute(text("ALTER TABLE coding_test_invites ADD COLUMN IF NOT EXISTS opened_at TIMESTAMP WITH TIME ZONE"))
+    connection.execute(text("ALTER TABLE coding_test_invites ADD COLUMN IF NOT EXISTS recording_path VARCHAR"))

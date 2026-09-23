@@ -9,6 +9,14 @@ export interface CandidateCodingTestSummary {
   passed_cases: number | null
   total_cases: number | null
   submission_ids: number[]
+  question_statuses: CodingQuestionStatus[]
+}
+
+export interface CodingQuestionStatus {
+  id: number
+  title: string
+  status: 'accepted' | 'wrong_answer' | 'runtime_error' | 'time_limit_exceeded' | 'pending' | 'skipped'
+  submission_id: number | null
 }
 
 export interface JobCandidateOverviewRow {
@@ -40,6 +48,8 @@ export interface CodingSubmissionDetail {
   passed_cases: number
   total_cases: number
   submitted_at: string
+  has_recording: boolean
+  question_statuses: CodingQuestionStatus[]
   results: Array<{
     input: string
     expected: string
