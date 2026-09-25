@@ -19,7 +19,7 @@ Hard requirements for every question:
 - Every input value goes on its own line.
 - Lists and arrays are space-separated values, matching Python's list(map(int, input().split())).
 - Candidate code must always read input with input() and print the final answer with print().
-- Keep output formatting consistent and tight. For example, print [0,1], never [0, 1].
+- Keep output formatting consistent with Python's print. For example, print [0, 1], never [0,1].
 - Make every test case consistent with the described input and output format.
 - Use only easy or medium difficulty.
 """
@@ -60,7 +60,7 @@ def generate_coding_questions(count: int = 2) -> List[dict]:
 Return ONLY valid JSON, with no markdown or commentary, in this exact shape:
 {{"questions":[{{"title":"string","description":"string","difficulty":"easy","test_cases":[{{"input":"string","expected_output":"string","is_sample":true}}]}}]}}
 The questions array must contain exactly {count} objects. Every object must use exactly the keys title, description, difficulty, test_cases. difficulty must be exactly lowercase "easy" or "medium". Every test case must use exactly input, expected_output, is_sample; input and expected_output must be strings, and is_sample must be boolean. Include exactly 2 sample cases and at least 3 hidden cases per question.
-Every input value goes on its own line; arrays are space-separated values parsed with list(map(int, input().split())). Candidate code reads with input() and prints with print(). Use tight output such as [0,1], not [0, 1].
+Every input value goes on its own line; arrays are space-separated values parsed with list(map(int, input().split())). Candidate code reads with input() and prints with print(). Match Python's default list output, including spaces after commas, such as [0, 1], not [0,1].
 {_PROMPT_RULES}"""
 
     response = get_groq_client().chat.completions.create(
