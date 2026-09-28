@@ -17,6 +17,8 @@ from ..models import (
     CodingTest,
     CodingTestInvite,
     CodingTestQuestion,
+    InterviewQuestion,
+    InterviewSession,
     Job,
     TestCase,
     Users,
@@ -38,6 +40,7 @@ def get_db():
 
 db_dependency = Annotated[Session, Depends(get_db)]
 user_dependency = Annotated[dict, Depends(require_recruiter)]
+recruiter_dependency = Annotated[dict, Depends(require_recruiter)]
 
 
 @router.get("/jobs/{job_id}/candidates-overview")
@@ -73,13 +76,101 @@ async def get_candidates_overview(db: db_dependency, user: user_dependency, job_
     for invite, test in invites:
         invites_by_candidate[invite.candidate_id].append((invite, test))
 
+    candidate_ids = [candidate.id for _, candidate, _ in applications]
+    interview_sessions = (
+        db.query(InterviewSession)
+        .filter(
+            InterviewSession.job_id == job_id,
+            InterviewSession.candidate_id.in_(candidate_ids),
+        )
+        .order_by(InterviewSession.created_at.desc(), InterviewSession.id.desc())
+        .all()
+        if candidate_ids
+        else []
+    )
+    latest_interview_by_candidate = {}
+    for interview in interview_sessions:
+        latest_interview_by_candidate.setdefault(interview.candidate_id, interview)
+
     return {
         "job": {"id": job.id, "title": job.title},
         "candidates": [
-            _candidate_overview(db, application, candidate, profile, invites_by_candidate.get(candidate.id, []))
+            _candidate_overview(
+                db,
+                application,
+                candidate,
+                profile,
+                invites_by_candidate.get(candidate.id, []),
+                latest_interview_by_candidate.get(candidate.id),
+            )
             for application, candidate, profile in applications
         ],
     }
+
+
+@router.get("/interview-sessions/{session_id}")
+async def get_interview_session(
+    db: db_dependency,
+    user: recruiter_dependency,
+    session_id: int,
+):
+    row = (
+        db.query(InterviewSession, Users.name, Job.title)
+        .join(Users, Users.id == InterviewSession.candidate_id)
+        .join(Job, Job.id == InterviewSession.job_id)
+        .filter(InterviewSession.id == session_id)
+        .first()
+    )
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Interview session not found")
+
+    interview, candidate_name, job_title = row
+    questions = (
+        db.query(InterviewQuestion)
+        .filter(InterviewQuestion.session_id == interview.id)
+        .order_by(InterviewQuestion.order_index)
+        .all()
+    )
+    return {
+        "id": interview.id,
+        "candidate_name": candidate_name,
+        "job_title": job_title,
+        "status": interview.status.value,
+        "overall_score": interview.overall_score,
+        "has_recording": bool(interview.recording_path),
+        "questions": [
+            {
+                "order_index": question.order_index,
+                "question_text": question.question_text,
+                "answer_transcript": question.answer_transcript,
+                "score": question.score,
+                "evaluation_details": question.evaluation_details,
+            }
+            for question in questions
+        ],
+    }
+
+
+@router.get("/interview-sessions/{session_id}/recording")
+async def get_interview_recording(
+    db: db_dependency,
+    user: recruiter_dependency,
+    session_id: int,
+):
+    interview = db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
+    if interview is None or not interview.recording_path:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recording not found")
+
+    video_root = Path("videos").resolve()
+    try:
+        recording_path = Path(interview.recording_path).resolve(strict=True)
+        recording_path.relative_to(video_root)
+    except (OSError, ValueError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recording not found")
+
+    if not recording_path.is_file():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recording not found")
+    return FileResponse(recording_path, media_type="video/webm")
 
 
 @router.get("/coding-submissions/{submission_id}")
@@ -152,6 +243,7 @@ def _candidate_overview(
     candidate: Users,
     profile: CandidateProfile | None,
     invites: list[tuple[CodingTestInvite, CodingTest]],
+    interview: InterviewSession | None,
 ) -> dict:
     coding_tests = []
     for invite, test in invites:
@@ -190,7 +282,9 @@ def _candidate_overview(
         "applied_at": application.applied_at,
         "resume_score": application.resume_screening_score,
         "coding_tests": coding_tests,
-        "interview_score": application.interview_score,
+        "interview_status": interview.status.value if interview is not None else None,
+        "interview_score": interview.overall_score if interview is not None else None,
+        "interview_session_id": interview.id if interview is not None else None,
     }
 
 

@@ -29,7 +29,9 @@ export interface JobCandidateOverviewRow {
   applied_at: string
   resume_score: number | null
   coding_tests: CandidateCodingTestSummary[]
+  interview_status: 'not_started' | 'in_progress' | 'completed' | null
   interview_score: number | null
+  interview_session_id: number | null
 }
 
 export interface JobCandidatesOverview {

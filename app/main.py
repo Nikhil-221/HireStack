@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from .database import Base,engine
-from .routers import auth,users,jobs,candidates,coding_questions,coding_tests,coding_attempts,admin_coding_results
+from .routers import auth,users,jobs,candidates,coding_questions,coding_tests,coding_attempts,admin_coding_results,interviews
 from . import models
 
 app = FastAPI()
@@ -27,6 +27,7 @@ app.include_router(router=coding_questions.router)
 app.include_router(router=coding_tests.router)
 app.include_router(router=coding_attempts.router)
 app.include_router(router=admin_coding_results.router)
+app.include_router(router=interviews.router)
 
 Base.metadata.create_all(bind=engine)
 

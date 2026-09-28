@@ -24,6 +24,7 @@ import { CandidateNotificationsPage } from '@/pages/CandidateNotificationsPage'
 import { TestAttemptPage } from '@/pages/TestAttemptPage'
 import { TestSubmittedPage } from '@/pages/TestSubmittedPage'
 import { HomePage } from '@/pages/HomePage'
+import { InterviewRoomPage } from '@/pages/InterviewRoomPage'
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
           </Route>
           <Route path="/test/attempt/:token/submitted" element={<ProtectedRoute allowedRoles={['candidate']}><TestSubmittedPage /></ProtectedRoute>} />
           <Route path="/test/attempt/:token" element={<ProtectedRoute allowedRoles={['candidate']}><TestAttemptPage /></ProtectedRoute>} />
+          <Route path="/interview/:token" element={<ProtectedRoute allowedRoles={['candidate']}><InterviewRoomPage /></ProtectedRoute>} />
           <Route path="/" element={<HomePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

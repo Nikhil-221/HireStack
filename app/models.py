@@ -2,7 +2,7 @@ from .database import Base
 from enum import Enum as PyEnum
 from uuid import uuid4
 
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text, UniqueConstraint, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text, Float, UniqueConstraint, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy import Date
@@ -16,6 +16,12 @@ class CodingQuestionDifficulty(str, PyEnum):
 
 
 class CodingTestInviteStatus(str, PyEnum):
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+
+
+class InterviewSessionStatus(str, PyEnum):
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -170,6 +176,41 @@ class CodingTestInvite(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
     opened_at = Column(DateTime(timezone=True), nullable=True)
     recording_path = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class InterviewSession(Base):
+    __tablename__ = "interview_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False, index=True)
+    candidate_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    token = Column(String, unique=True, nullable=False, default=lambda: str(uuid4()))
+    status = Column(
+        SQLEnum(
+            InterviewSessionStatus,
+            name="interview_session_status",
+            values_callable=_enum_values,
+        ),
+        nullable=False,
+    )
+    overall_score = Column(Float, nullable=True)
+    recording_path = Column(String, nullable=True)
+    opened_at = Column(DateTime(timezone=True), nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class InterviewQuestion(Base):
+    __tablename__ = "interview_questions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("interview_sessions.id"), nullable=False, index=True)
+    order_index = Column(Integer, nullable=False)
+    question_text = Column(Text, nullable=False)
+    answer_transcript = Column(Text, nullable=True)
+    score = Column(Float, nullable=True)
+    evaluation_details = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 

@@ -81,6 +81,10 @@ export function JobDetailsPage() {
     navigate(`/jobs/${jobId}/applicants/${applicationId}`)
   }
 
+  const navigateInterviewResults = (applicationId: number) => {
+    navigate(`/jobs/${jobId}/applicants/${applicationId}#interview-results`)
+  }
+
   const openSubmission = async (ids: number[]) => {
     if (ids.length === 0) return
     setSubmissionIds(ids)
@@ -231,6 +235,7 @@ export function JobDetailsPage() {
         onStatusChange={handleApplicantStatusChange}
         onOpenSubmission={openSubmission}
         onOpenApplicant={navigateApplicant}
+        onOpenInterview={navigateInterviewResults}
       />
 
       {selectedSubmission && (
@@ -269,6 +274,7 @@ function CandidateScoreOverview({
   onStatusChange,
   onOpenSubmission,
   onOpenApplicant,
+  onOpenInterview,
 }: {
   rows: JobCandidateOverviewRow[]
   isLoading: boolean
@@ -277,6 +283,7 @@ function CandidateScoreOverview({
   onStatusChange: (applicationId: number, status: ApplicationStatus) => void
   onOpenSubmission: (submissionIds: number[]) => void
   onOpenApplicant: (applicationId: number) => void
+  onOpenInterview: (applicationId: number) => void
 }) {
   const sortedRows = [...rows].sort((left, right) => {
     const leftValue = overviewSortValue(left, sort.key)
@@ -295,7 +302,7 @@ function CandidateScoreOverview({
         <div><p className="text-xs font-bold uppercase tracking-[.16em] text-brand-600">Candidate pool</p><h2 className="mt-1 text-base font-bold text-slate-900">Score overview</h2><p className="mt-1 text-sm text-slate-500">Compare every applicant across the hiring signals for this job.</p></div>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">{rows.length} applicants</span>
       </div>
-      {isLoading ? <p className="px-6 py-8 text-sm text-slate-500">Loading candidate scores…</p> : rows.length === 0 ? <p className="px-6 py-8 text-sm text-slate-500">No applications yet.</p> : <div className="overflow-x-auto"><table className="min-w-[820px] w-full text-left"><thead className="bg-slate-50 text-xs uppercase tracking-[.1em] text-slate-500"><tr><SortableHeader label="Candidate" active={sort.key === 'name'} direction={sort.direction} onClick={() => toggleSort('name')} /><SortableHeader label="Resume ATS" active={sort.key === 'resume'} direction={sort.direction} onClick={() => toggleSort('resume')} /><th className="px-5 py-3 font-bold">Coding test</th><SortableHeader label="Coding score" active={sort.key === 'coding'} direction={sort.direction} onClick={() => toggleSort('coding')} /><SortableHeader label="Interview" active={sort.key === 'interview'} direction={sort.direction} onClick={() => toggleSort('interview')} /><th className="px-5 py-3 font-bold">Application</th></tr></thead><tbody className="divide-y divide-slate-100">{sortedRows.map((row) => { const coding = row.coding_tests[0]; return <tr key={row.application_id} className="transition hover:bg-slate-50/70"><td className="px-5 py-4"><button type="button" onClick={() => onOpenApplicant(row.application_id)} className="text-left"><p className="text-sm font-bold text-slate-900 hover:text-brand-600">{row.name}</p><p className="mt-1 text-xs text-slate-500">{row.email}</p></button></td><td className="px-5 py-4"><ScorePill value={row.resume_score} /></td><td className="px-5 py-4"><div className="text-sm text-slate-700">{coding ? coding.test_title : 'Not invited'}</div><div className="mt-1 text-xs capitalize text-slate-500">{coding?.status.replaceAll('_', ' ') ?? '—'}</div></td><td className="px-5 py-4">{coding?.score !== null && coding?.score !== undefined ? <button type="button" onClick={() => onOpenSubmission(coding.submission_ids)} className="text-sm font-bold text-brand-600 underline decoration-brand-200 underline-offset-4 hover:text-brand-700">{coding.score}%</button> : <span className="text-sm text-slate-400">—</span>}</td><td className="px-5 py-4"><ScorePill value={row.interview_score} /></td><td className="px-5 py-4" onClick={(event) => event.stopPropagation()}><Select id={`overview-status-${row.application_id}`} options={applicationStatusOptions} value={row.status} onChange={(event) => onStatusChange(row.application_id, event.target.value as ApplicationStatus)} /></td></tr> })}</tbody></table></div>}
+      {isLoading ? <p className="px-6 py-8 text-sm text-slate-500">Loading candidate scores…</p> : rows.length === 0 ? <p className="px-6 py-8 text-sm text-slate-500">No applications yet.</p> : <div className="overflow-x-auto"><table className="min-w-[820px] w-full text-left"><thead className="bg-slate-50 text-xs uppercase tracking-[.1em] text-slate-500"><tr><SortableHeader label="Candidate" active={sort.key === 'name'} direction={sort.direction} onClick={() => toggleSort('name')} /><SortableHeader label="Resume ATS" active={sort.key === 'resume'} direction={sort.direction} onClick={() => toggleSort('resume')} /><th className="px-5 py-3 font-bold">Coding test</th><SortableHeader label="Coding score" active={sort.key === 'coding'} direction={sort.direction} onClick={() => toggleSort('coding')} /><SortableHeader label="Interview" active={sort.key === 'interview'} direction={sort.direction} onClick={() => toggleSort('interview')} /><th className="px-5 py-3 font-bold">Application</th></tr></thead><tbody className="divide-y divide-slate-100">{sortedRows.map((row) => { const coding = row.coding_tests[0]; return <tr key={row.application_id} className="transition hover:bg-slate-50/70"><td className="px-5 py-4"><button type="button" onClick={() => onOpenApplicant(row.application_id)} className="text-left"><p className="text-sm font-bold text-slate-900 hover:text-brand-600">{row.name}</p><p className="mt-1 text-xs text-slate-500">{row.email}</p></button></td><td className="px-5 py-4"><ScorePill value={row.resume_score} /></td><td className="px-5 py-4"><div className="text-sm text-slate-700">{coding ? coding.test_title : 'Not invited'}</div><div className="mt-1 text-xs capitalize text-slate-500">{coding?.status.replaceAll('_', ' ') ?? '—'}</div></td><td className="px-5 py-4">{coding?.score !== null && coding?.score !== undefined ? <button type="button" onClick={() => onOpenSubmission(coding.submission_ids)} className="text-sm font-bold text-brand-600 underline decoration-brand-200 underline-offset-4 hover:text-brand-700">{coding.score}%</button> : <span className="text-sm text-slate-400">—</span>}</td><td className="px-5 py-4">{row.interview_status === 'completed' && row.interview_session_id !== null ? <button type="button" onClick={() => onOpenInterview(row.application_id)} aria-label={`View interview results for ${row.name}`} className="rounded underline decoration-brand-200 underline-offset-4 hover:decoration-brand-600"><ScorePill value={row.interview_score} /></button> : <ScorePill value={row.interview_score} />}</td><td className="px-5 py-4" onClick={(event) => event.stopPropagation()}><Select id={`overview-status-${row.application_id}`} options={applicationStatusOptions} value={row.status} onChange={(event) => onStatusChange(row.application_id, event.target.value as ApplicationStatus)} /></td></tr> })}</tbody></table></div>}
     </section>
   )
 }
