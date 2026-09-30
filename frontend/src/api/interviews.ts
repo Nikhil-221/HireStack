@@ -77,9 +77,9 @@ export async function fetchAdminInterviewResult(sessionId: number): Promise<Inte
   return response.data
 }
 
-export async function fetchAdminInterviewRecording(sessionId: number): Promise<Blob> {
-  const response = await apiClient.get(`/admin/interview-sessions/${sessionId}/recording`, { responseType: 'blob' })
-  return response.data
+export async function createAdminInterviewRecordingUrl(sessionId: number): Promise<string> {
+  const response = await apiClient.post<{ url: string }>(`/admin/interview-sessions/${sessionId}/recording-url`)
+  return response.data.url
 }
 
 export async function fetchInterview(token: string): Promise<InterviewSession> {

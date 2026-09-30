@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
+import { RecordingAnalysis } from '@/components/RecordingAnalysis'
 import { fetchCodingTests, inviteCandidate } from '@/api/codingTests'
 import {
   createInterviewInvite,
-  fetchAdminInterviewRecording,
+  createAdminInterviewRecordingUrl,
   fetchAdminInterviewResult,
   fetchJobInterviewStatus,
   type InterviewResult,
@@ -114,20 +115,17 @@ export function ApplicantDetailsPage() {
       return
     }
     let isCancelled = false
-    let objectUrl: string | null = null
     setInterviewRecordingError(null)
-    fetchAdminInterviewRecording(interviewResult.id)
-      .then((blob) => {
+    createAdminInterviewRecordingUrl(interviewResult.id)
+      .then((url) => {
         if (isCancelled) return
-        objectUrl = URL.createObjectURL(blob)
-        setInterviewRecordingUrl(objectUrl)
+        setInterviewRecordingUrl(url)
       })
       .catch(() => {
         if (!isCancelled) setInterviewRecordingError('Could not load the interview recording.')
       })
     return () => {
       isCancelled = true
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
   }, [interviewResult?.has_recording, interviewResult?.id])
 
@@ -356,7 +354,7 @@ export function ApplicantDetailsPage() {
             <h3 className="text-sm font-semibold text-slate-900">Interview recording</h3>
             {!interviewResult.has_recording ? <p className="mt-2 text-sm text-slate-500">No recording is available.</p>
               : interviewRecordingError ? <p className="mt-2 text-sm text-red-700">{interviewRecordingError}</p>
-                : interviewRecordingUrl ? <video controls playsInline src={interviewRecordingUrl} className="mt-3 aspect-video max-h-[560px] w-full rounded-xl bg-black" />
+                : interviewRecordingUrl ? <div className="mt-3"><RecordingAnalysis src={interviewRecordingUrl} refreshSrc={() => createAdminInterviewRecordingUrl(interviewResult.id)} videoClassName="aspect-video max-h-[560px] w-full rounded-xl bg-black" /></div>
                   : <p className="mt-2 text-sm text-slate-500">Loading recording…</p>}
           </div>
         </>}

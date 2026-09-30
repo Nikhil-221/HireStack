@@ -11,7 +11,7 @@ export async function fetchCodingSubmissionDetail(submissionId: number): Promise
   return response.data
 }
 
-export async function fetchCodingRecording(inviteId: number): Promise<Blob> {
-  const response = await apiClient.get(`/admin/coding-test-invites/${inviteId}/recording`, { responseType: 'blob' })
-  return response.data
+export async function createCodingRecordingUrl(inviteId: number): Promise<string> {
+  const response = await apiClient.post<{ url: string }>(`/admin/coding-test-invites/${inviteId}/recording-url`)
+  return response.data.url
 }
